@@ -4,21 +4,21 @@ services:
   app:
     build:
       context: .
-      dockerfile: dockerfile
+      dockerfile: Dockerfile
     container_name: auth-service
     ports:
       - "8080:8080"
     volumes:
-      # Mount named volumes
+      # Named volumes
       - seed-data:/data
       - cron-output:/cron
-      # Mount key files as read-only
+      # Local key files mounted read-only
       - ./student_private.pem:/app/student_private.pem:ro
       - ./student_public.pem:/app/student_public.pem:ro
       - ./instructor_public.pem:/app/instructor_public.pem:ro
     environment:
       - TZ=UTC
-      - PYTHONUNBUFFERED=1   # Ensure logs appear in real-time
+      - PYTHONUNBUFFERED=1
     restart: unless-stopped
 
 volumes:
