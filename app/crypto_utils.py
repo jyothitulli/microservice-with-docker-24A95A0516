@@ -1,6 +1,7 @@
 import base64
 from binascii import unhexlify
 import pyotp
+import time
 
 
 def hex_to_base32(hex_seed: str) -> str:
