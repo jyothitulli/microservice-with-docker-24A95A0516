@@ -1,52 +1,52 @@
-# ------------------------------------------------------------
-# Stage 1: Builder - Install dependencies
-# ------------------------------------------------------------
+# =========================
+# Stage 1: Build Python dependencies
+# =========================
 FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
+# Copy requirements
 COPY requirements.txt .
-# RUN pip install --user --no-cache-dir -r requirements.txt
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir --index-url https://pypi.org/simple -r requirements.txt
 
+# Install dependencies into /install (global, no --user)
+RUN pip install --upgrade pip && \
+    pip install --prefix=/install --no-cache-dir -r requirements.txt
 
-
-# ------------------------------------------------------------
-# Stage 2: Runtime
-# ------------------------------------------------------------
+# =========================
+# Stage 2: Final image
+# =========================
 FROM python:3.11-slim
 
+# Set environment variables
 ENV TZ=UTC
+ENV PYTHONUNBUFFERED=1
 
+# Working directory
 WORKDIR /app
 
-# Install cron + timezone tools
+# Install cron & tzdata
 RUN apt-get update && \
     apt-get install -y cron tzdata && \
     rm -rf /var/lib/apt/lists/*
 
-# Configure timezone to UTC
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Set timezone
+RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo "UTC" > /etc/timezone
 
-# Copy dependencies from builder
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+# Copy Python dependencies from builder
+COPY --from=builder /install /usr/local
 
-# Copy project source
+# Copy project files
 COPY . .
 
-# Make required volume directories
-RUN mkdir -p /data /cron && chmod -R 755 /data /cron
+# Setup cron job
+COPY cron/2fa-cron /etc/cron.d/2fa-cron
+RUN chmod 0644 /etc/cron.d/2fa-cron && crontab /etc/cron.d/2fa-cron
 
-# Copy cron job to /cron (we will create next step)
-# RUN cp cronjob /etc/cron.d/auth-cronjob     # Uncomment later
+# Create volumes
+RUN mkdir -p /data /cron && chmod 755 /data /cron
 
-# Ensure cron has correct permissions
-# RUN chmod 0644 /etc/cron.d/auth-cronjob     # Uncomment later
-# RUN crontab /etc/cron.d/auth-cronjob        # Uncomment later
-
+# Expose port
 EXPOSE 8080
 
-# Start cron in background + start API
-CMD cron && uvicorn app.api:app --host 0.0.0.0 --port 8080
+# Start cron in background, then start uvicorn
+CMD ["sh", "-c", "cron && exec uvicorn app.main:app --host 0.]()
