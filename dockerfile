@@ -53,4 +53,4 @@ RUN mkdir -p /data /cron && chmod 755 /data /cron
 EXPOSE 8080
 
 # Start cron and application
-CMD ["sh", "-c", "cron && exec uvicorn app.main:app --host 0.0.0.0 --port 8080"]
+CMD ["sh", "-c", "cron && exec uvicorn main:app --host 0.0.0.0 --port 8080"]
