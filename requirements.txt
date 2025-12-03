@@ -1,4 +1,5 @@
 fastapi
 uvicorn
+requests
+cryptography
 pyotp
-pycryptodome

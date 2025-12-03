@@ -1,39 +1,27 @@
 #!/usr/bin/env python3
-
-import os
-import time
-from datetime import datetime, timezone
+import datetime
 import pyotp
-import binascii
+import os
 
-SEED_PATH = "/app/data/seed.txt"
-OUTPUT = "/app/cron/last_code.txt"
-
-
-def read_seed():
+def load_hex_seed():
     try:
-        with open(SEED_PATH, "r") as f:
-            seed_hex = f.read().strip()
-        seed_bytes = binascii.unhexlify(seed_hex)
-        seed_base32 = pyotp.utils.base32.b32encode(seed_bytes).decode()
-        return seed_base32
-    except Exception as e:
+        with open("/data/seed.txt", "r") as f:
+            return f.read().strip()
+    except FileNotFoundError:
         return None
 
+hex_seed = load_hex_seed()
+if not hex_seed:
+    print("No seed available")
+    exit()
 
-def log_totp():
-    seed_base32 = read_seed()
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+# Convert hex → base32
+seed_bytes = bytes.fromhex(hex_seed)
+base32_seed = pyotp.utils.base32encode(seed_bytes)
 
-    if seed_base32:
-        totp = pyotp.TOTP(seed_base32)
-        code = totp.now()
-        log = f"{timestamp} - 2FA Code: {code}"
-    else:
-        log = f"{timestamp} - ERROR: Seed not found"
+totp = pyotp.TOTP(base32_seed)
+code = totp.now()
 
-    print(log)
+timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
-
-if __name__ == "__main__":
-    log_totp()
+print(f"{timestamp} - 2FA Code: {code}")

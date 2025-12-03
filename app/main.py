@@ -1,48 +1,88 @@
-# from app.crypto_utils import generate_totp_code, verify_totp_code
+# app/main.py
 
-# # Load decrypted seed
-# with open("data/seed.txt", "r") as f:
-#     hex_seed = f.read().strip()
-
-# # Generate TOTP
-# code, remaining = generate_totp_code(hex_seed)
-# print(f"TOTP Code: {code}, valid for next {remaining} seconds")
-
-# # Verify TOTP
-# user_input = input("Enter the TOTP code: ")
-# if verify_totp_code(hex_seed, user_input):
-#     print("✅ Verified!")
-# else:
-#     print("❌ Invalid code")
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 import os
-from app.crypto_utils import generate_totp_code, verify_totp_code
+
+from app.crypto_utils import decrypt_seed
+from app.totp_utils import (
+    generate_totp_code,
+    seconds_remaining_in_period,
+    verify_totp_code,
+)
 
 app = FastAPI()
 
-SEED_FILE = "/data/seed.txt"
+SEED_PATH = "/data/seed.txt"  # this path will be used inside Docker
 
-def read_seed():
-    if not os.path.exists(SEED_FILE):
-        raise FileNotFoundError("Seed file missing!")
-    with open(SEED_FILE, 'r') as f:
+
+# ------------ Models ------------
+
+class DecryptRequest(BaseModel):
+    encrypted_seed: str
+
+
+class Generate2FAResponse(BaseModel):
+    code: str
+    valid_for: int
+
+
+class VerifyRequest(BaseModel):
+    code: str
+
+
+class VerifyResponse(BaseModel):
+    valid: bool
+
+
+# ------------ Helpers ------------
+
+def _read_hex_seed() -> str:
+    if not os.path.exists(SEED_PATH):
+        raise FileNotFoundError("Seed not decrypted yet")
+    with open(SEED_PATH, "r") as f:
         return f.read().strip()
 
-@app.get("/")
-def home():
-    return {"message": "Auth Service Running!"}
 
-@app.get("/generate")
-def generate_code():
-    seed = read_seed()
-    code = generate_totp(seed)
-    return {"totp_code": code}
+# ------------ Endpoint 1: POST /decrypt-seed ------------
 
-@app.post("/verify/{code}")
-def verify_code(code: str):
-    seed = read_seed()
-    is_valid = verify_totp(seed, code)
-    if is_valid:
-        return {"status": "Valid Code"}
-    else:
-        raise HTTPException(status_code=401, detail="Invalid or expired code")
+@app.post("/decrypt-seed")
+def decrypt_seed_endpoint(body: DecryptRequest):
+    try:
+        hex_seed = decrypt_seed(body.encrypted_seed)
+        os.makedirs(os.path.dirname(SEED_PATH), exist_ok=True)
+        with open(SEED_PATH, "w") as f:
+            f.write(hex_seed + "\n")
+        return {"status": "ok"}
+    except Exception:
+        raise HTTPException(status_code=500, detail="Decryption failed")
+
+
+# ------------ Endpoint 2: GET /generate-2fa ------------
+
+@app.get("/generate-2fa", response_model=Generate2FAResponse)
+def generate_2fa():
+    try:
+        hex_seed = _read_hex_seed()
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="Seed not decrypted yet")
+
+    code = generate_totp_code(hex_seed)
+    valid_for = seconds_remaining_in_period()
+    return {"code": code, "valid_for": valid_for}
+
+
+# ------------ Endpoint 3: POST /verify-2fa ------------
+
+@app.post("/verify-2fa", response_model=VerifyResponse)
+def verify_2fa(body: VerifyRequest):
+    if not body.code:
+        raise HTTPException(status_code=400, detail="Missing code")
+
+    try:
+        hex_seed = _read_hex_seed()
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="Seed not decrypted yet")
+
+    is_valid = verify_totp_code(hex_seed, body.code, valid_window=1)
+    return {"valid": is_valid}
