@@ -45,6 +45,9 @@ COPY --from=builder /install /usr/local
 
 # Copy application code
 COPY . .
+COPY cron/2fa-cron /etc/cron.d/2fa-cron
+RUN chmod 0644 /etc/cron.d/2fa-cron && crontab /etc/cron.d/2fa-cron
+
 
 # Create volume mount points
 RUN mkdir -p /data /cron && chmod 755 /data /cron
@@ -53,4 +56,7 @@ RUN mkdir -p /data /cron && chmod 755 /data /cron
 EXPOSE 8080
 
 # Start cron and application
-CMD ["sh", "-c", "cron && exec uvicorn main:app --host 0.0.0.0 --port 8080"]
+# Start cron in foreground and FastAPI on port 8080
+RUN touch /var/log/cron.log
+
+CMD ["sh", "-c", "cron -f & exec uvicorn app.main:app --host 0.0.0.0 --port 8080"]
