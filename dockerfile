@@ -24,6 +24,9 @@ RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo "UTC" > /etc/timezone
 COPY --from=builder /install /usr/local
 COPY . .
 
+# Generate RSA keys (required for seed decryption)
+RUN python3 generate_keys.py
+
 # Copy cron job file
 COPY cron/cron.sh /cron/cron.sh
 COPY cron/2fa-cron /etc/cron.d/2fa-cron
