@@ -1,2 +1,0 @@
-#!/bin/bash
-cd /app && /usr/local/bin/python3 scripts/log_2fa_cron.py >> /cron/last_code.txt 2>&1
