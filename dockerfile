@@ -28,5 +28,7 @@ RUN chmod 0644 /etc/cron.d/2fa-cron && \
     crontab /etc/cron.d/2fa-cron
 
 EXPOSE 8080
+COPY keys/student_private.pem /app/student_private.pem
+COPY keys/student_public.pem /app/student_public.pem
 
 CMD cron && uvicorn app.main:app --host 0.0.0.0 --port 8080
