@@ -7,17 +7,14 @@ services:
     container_name: otp-container
 
     ports:
-      - "8080:8080"
+      - "8000:8000"
 
     volumes:
-      - seed-data:/data
-      - cron-output:/cron
+      - ./keys:/app/keys
+      - ./data:/app/data
+      - ./cron:/app/cron
 
     environment:
       TZ: UTC
 
     restart: unless-stopped
-
-volumes:
-  seed-data:
-  cron-output:

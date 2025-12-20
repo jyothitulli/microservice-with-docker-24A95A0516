@@ -57,7 +57,7 @@ def main():
     print(f"Commit Hash: {commit_hash}")
 
     # Step 2: Load Student Private Key
-    with open("student_private.pem", "rb") as f:
+    with open("keys/student_private.pem", "rb") as f:
         private_key = serialization.load_pem_private_key(
             f.read(),
             password=None
@@ -67,9 +67,8 @@ def main():
     signature = sign_message(commit_hash, private_key)
 
     # Step 4: Load Instructor Public Key
-    with open("instructor_public.pem", "rb") as f:
+    with open("keys/instructor_public.pem", "rb") as f:
         public_key = serialization.load_pem_public_key(f.read())
-
     # Step 5: Encrypt Signature
     encrypted_signature = encrypt_with_public_key(signature, public_key)
 
