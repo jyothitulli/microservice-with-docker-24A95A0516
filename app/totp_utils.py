@@ -1,4 +1,3 @@
-
 # app/totp_utils.py
 
 import base64

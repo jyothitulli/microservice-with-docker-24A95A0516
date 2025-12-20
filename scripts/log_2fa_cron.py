@@ -2,7 +2,7 @@
 import datetime
 import pyotp
 import os
-import base64
+import base64  # <-- add this
 
 def load_hex_seed():
     try:
@@ -16,11 +16,10 @@ if not hex_seed:
     print("No seed available")
     exit()
 
-# Convert hex → bytes → base32
+# Convert hex → base32
 seed_bytes = bytes.fromhex(hex_seed)
-base32_seed = base64.b32encode(seed_bytes).decode('utf-8')
+base32_seed = base64.b32encode(seed_bytes).decode('utf-8')  # <-- fixed line
 
-# Generate TOTP
 totp = pyotp.TOTP(base32_seed)
 code = totp.now()
 

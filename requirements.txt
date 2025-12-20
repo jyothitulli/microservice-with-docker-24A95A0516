@@ -1,5 +1,5 @@
 fastapi
 uvicorn
-requests
-cryptography
 pyotp
+cryptography
+requests

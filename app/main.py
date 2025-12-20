@@ -10,10 +10,6 @@ from app.totp_utils import (
     seconds_remaining_in_period,
     verify_totp_code,
 )
-from app.load_seed_on_startup import ensure_seed
-
-ensure_seed()  # will create /data/seed.txt if possible
-
 
 app = FastAPI()
 

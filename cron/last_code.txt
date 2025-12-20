@@ -1,0 +1,4 @@
+C:\Users\durga\Downloads\microservice-with-docker-24A95A0516\scripts\log_2fa_cron.py:26: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+2025-12-20 05:45:52 - 2FA Code: 045658
+2025-12-20 06:14:54 - 2FA Code: 708260
