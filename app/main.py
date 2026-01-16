@@ -45,6 +45,9 @@ def _read_hex_seed() -> str:
 
 
 # ------------ Endpoint 1: POST /decrypt-seed ------------
+@app.get("/")
+def root():
+    return {"status": "OTP microservice running"}
 
 @app.post("/decrypt-seed")
 def decrypt_seed_endpoint(body: DecryptRequest):
@@ -73,6 +76,11 @@ def generate_2fa():
 
 
 # ------------ Endpoint 3: POST /verify-2fa ------------
+@app.get("/otp")
+def get_otp():
+    hex_seed = _read_hex_seed()
+    code = generate_totp_code(hex_seed)
+    return {"otp": code}
 
 @app.post("/verify-2fa", response_model=VerifyResponse)
 def verify_2fa(body: VerifyRequest):

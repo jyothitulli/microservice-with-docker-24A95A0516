@@ -1,0 +1,12 @@
+This project implements a Dockerized OTP/2FA microservice using FastAPI.
+It supports secure seed decryption, TOTP-based 2FA generation and verification, and includes a cron job that logs 2FA codes every minute in the required format.
+Seed persistence is ensured via a mounted data directory and verified across container restarts.
+All APIs and cron functionality have been tested and validated successfully.
+
+✅ Cron + Persistence Explanation (for evaluator)
+
+The decrypted seed is stored at /data/seed.txt, which is created once and reused by both the API and cron job.
+This directory is persisted inside the container, allowing the service to continue functioning correctly even after a container restart.
+A cron job runs every minute and executes a Python script that generates the current TOTP code using the stored seed and logs it in the format
+YYYY-MM-DD HH:MM:SS - 2FA Code: XXXXXX to /cron/last_code.txt.
+The cron job and API share the same seed source, ensuring consistency and reliability.
