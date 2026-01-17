@@ -13,3 +13,9 @@ data/seed.txt
 .idea/
 
 venv/
+
+*.png
+*.sig
+*.txt
+openssl/
+__pycache__/
