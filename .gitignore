@@ -14,8 +14,7 @@ data/seed.txt
 
 venv/
 
-*.png
 *.sig
-*.txt
+*.log
 openssl/
 __pycache__/
